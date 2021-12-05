@@ -36,7 +36,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://amAdmin:"+os.Getenv("DBpw2")+"@cluster0.lkbf1.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"))
-	fmt.Println(os.Getenv("DBpw2"))
 	if err != nil {
 		panic(err)
 	}
