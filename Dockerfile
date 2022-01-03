@@ -20,7 +20,7 @@ WORKDIR /comments-and-ratings-service/
 COPY --from=builder /comments-and-ratings-service/main .
 
 ARG DBpw_arg=default_value 
-ENV DBpw2=$DBpw_arg
+ENV DBpw=$DBpw_arg
 
 EXPOSE 8080
 
