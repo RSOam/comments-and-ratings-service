@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	httpAddr := flag.String("http", ":8081", "http listen addr")
+	httpAddr := flag.String("http", ":8080", "http listen addr")
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
