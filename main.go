@@ -87,5 +87,4 @@ func getConsulClient(address string) (*consulapi.Client, error) {
 	config.Address = address
 	consul, err := consulapi.NewClient(config)
 	return consul, err
-
 }
