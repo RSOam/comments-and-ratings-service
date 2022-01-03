@@ -46,6 +46,7 @@ func main() {
 			panic(err)
 		}
 	}()
+
 	//CONSUL
 	consulClient, err := getConsulClient(os.Getenv("CONSUL_ADDR"))
 	if err != nil {
