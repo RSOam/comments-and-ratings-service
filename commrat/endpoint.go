@@ -43,7 +43,7 @@ func MakeEndpoints(s CommRatService) Endpoints {
 func makeCreateCommentEndpoint(s CommRatService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreateCommentRequest)
-		status, err := s.CreateComment(ctx, req.Text, req.UserID, req.ChargerID)
+		status, err := s.CreateComment(ctx, req.Text, req.UserToken, req.ChargerID)
 		return CreateCommentResponse{Status: status}, err
 	}
 }
@@ -95,7 +95,7 @@ func makeUpdateCommentEndpoint(s CommRatService) endpoint.Endpoint {
 func makeCreateRatingEndpoint(s CommRatService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreateRatingRequest)
-		status, err := s.CreateRating(ctx, req.Rating, req.UserID, req.ChargerID)
+		status, err := s.CreateRating(ctx, req.Rating, req.UserToken, req.ChargerID)
 		return CreateRatingResponse{Status: status}, err
 	}
 }

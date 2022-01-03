@@ -3,6 +3,7 @@ module github.com/RSOam/comments-and-ratings-service
 go 1.17
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-kit/kit v0.12.0
 	github.com/go-kit/log v0.2.0
 	github.com/gorilla/mux v1.8.0

@@ -2,7 +2,9 @@ package commrat
 
 import (
 	"context"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	consulapi "github.com/hashicorp/consul/api"
@@ -22,9 +24,17 @@ func NewService(db CommRatDB, logger log.Logger, consul consulapi.Client) CommRa
 	}
 }
 
-func (s service) CreateComment(ctx context.Context, text string, userID string, chargerID string) (string, error) {
+func (s service) CreateComment(ctx context.Context, text string, userToken string, chargerID string) (string, error) {
 	logger := log.With(s.logger, "method: ", "CreateComment")
-
+	secret, _ := getConsulValue(s.consul, s.logger, "jwtSecret")
+	token := strings.Split(userToken, " ")
+	if len(token) != 2 {
+		return "Authorization failed", nil
+	}
+	userID, err := FromJWT(token[1], secret)
+	if err != nil {
+		return "Authorization failed", nil
+	}
 	if err := s.db.CreateComment(ctx, text, userID, chargerID); err != nil {
 		level.Error(logger).Log("err", err)
 		return "", err
@@ -85,9 +95,17 @@ func (s service) UpdateComment(ctx context.Context, id string, text string) (str
 }
 
 //RATING
-func (s service) CreateRating(ctx context.Context, rating float64, userID string, chargerID string) (string, error) {
+func (s service) CreateRating(ctx context.Context, rating float64, userToken string, chargerID string) (string, error) {
 	logger := log.With(s.logger, "method: ", "CreateRating")
-
+	secret, _ := getConsulValue(s.consul, s.logger, "jwtSecret")
+	token := strings.Split(userToken, " ")
+	if len(token) != 2 {
+		return "Authorization failed", nil
+	}
+	userID, err := FromJWT(token[1], secret)
+	if err != nil {
+		return "Authorization failed", nil
+	}
 	if err := s.db.CreateRating(ctx, rating, userID, chargerID); err != nil {
 		level.Error(logger).Log("err", err)
 		return "", err
@@ -144,4 +162,14 @@ func (s service) UpdateRating(ctx context.Context, id string, rating float64) (s
 	}
 	logger.Log("update Rating", id)
 	return "Ok", nil
+}
+func FromJWT(token string, secret string) (string, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return claims["user_id"].(string), nil
 }

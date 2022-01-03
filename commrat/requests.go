@@ -11,7 +11,7 @@ import (
 type (
 	CreateCommentRequest struct {
 		ChargerID string `json:"chargerID"`
-		UserID    string `json:"userID"`
+		UserToken string `json:"userToken"`
 		Text      string `json:"text"`
 	}
 	CreateCommentResponse struct {
@@ -53,7 +53,7 @@ type (
 	//RATINGS
 	CreateRatingRequest struct {
 		ChargerID string  `json:"chargerID"`
-		UserID    string  `json:"userID"`
+		UserToken string  `json:"userToken"`
 		Rating    float64 `json:"rating"`
 	}
 	CreateRatingResponse struct {
@@ -107,6 +107,7 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 func decodeCreateCommentRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	req := CreateCommentRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
+	req.UserToken = r.Header.Get("Authorization")
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +150,7 @@ func decodeUpdateRatingRequest(ctx context.Context, r *http.Request) (interface{
 func decodeCreateRatingRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	req := CreateRatingRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
+	req.UserToken = r.Header.Get("Authorization")
 	if err != nil {
 		return nil, err
 	}
