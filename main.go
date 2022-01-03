@@ -11,15 +11,15 @@ import (
 	"time"
 
 	"github.com/RSOam/comments-and-ratings-service/commrat"
-
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	consulapi "github.com/hashicorp/consul/api"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	httpAddr := flag.String("http", ":8080", "http listen addr")
+	httpAddr := flag.String("http", ":8081", "http listen addr")
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -35,7 +35,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://amAdmin:"+os.Getenv("DBpw2")+"@cluster0.lkbf1.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://amAdmin:"+os.Getenv("DBpw")+"@cluster0.4lsbm.mongodb.net/Commrat?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -46,14 +46,20 @@ func main() {
 			panic(err)
 		}
 	}()
-	collection := client.Database("RSOam2")
+	//CONSUL
+	consulClient, err := getConsulClient(os.Getenv("CONSUL_ADDR"))
+	if err != nil {
+		panic(err)
+	}
+	level.Info(logger).Log("msg", "Consul Connected")
+	collection := client.Database("Commrat")
 
 	flag.Parse()
 	ctx2 := context.Background()
 	var srv commrat.CommRatService
 	{
-		database := commrat.NewDatabase(collection, logger)
-		srv = commrat.NewService(database, logger)
+		database := commrat.NewDatabase(collection, logger, *consulClient)
+		srv = commrat.NewService(database, logger, *consulClient)
 	}
 
 	errs := make(chan error)
@@ -75,4 +81,11 @@ func main() {
 }
 func test() string {
 	return "Ok"
+}
+func getConsulClient(address string) (*consulapi.Client, error) {
+	config := consulapi.DefaultConfig()
+	config.Address = address
+	consul, err := consulapi.NewClient(config)
+	return consul, err
+
 }
