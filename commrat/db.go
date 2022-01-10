@@ -212,7 +212,21 @@ func (dat *database) CreateRating(ctx context.Context, rating float64, userID st
 		return nil
 	}
 	val, _ := getConsulValue(dat.consul, dat.logger, "chargersService")
-	updateChargerRating(val, dat.logger, chargerID, avg)
+
+	requestBody, err := json.Marshal(PostChargerUpdateRequest{
+		AverageRating: avg,
+	})
+	if err != nil {
+		return err
+	}
+	chargersUri := val + "/chargers/"
+	ratingChan := make(chan *http.Response)
+	dat.logger.Log("Sending async request")
+	go AsyncPost(chargersUri+chargerID, requestBody, ratingChan, dat.logger)
+	//chargersResponse := <-ratingChan
+	//defer chargersResponse.Body.Close()
+	//updateChargerRating(val, dat.logger, chargerID, avg)
+	dat.logger.Log("Finished creating new rating")
 	return nil
 }
 func (dat *database) GetRating(ctx context.Context, id string) (Rating, error) {
@@ -398,6 +412,16 @@ func updateChargerRating(chargersAddr string, logger log.Logger, chargerID strin
 	client.CloseIdleConnections()
 	return "Ok", nil
 }
+
+func AsyncPost(url string, body []byte, rc chan *http.Response, logger log.Logger) {
+	response, err := http.Post(url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		logger.Log("Error sending async request: " + err.Error())
+	}
+	logger.Log("Async request finished")
+	rc <- response
+}
+
 func getConsulValue(consul consulapi.Client, logger log.Logger, key string) (string, error) {
 	kv := consul.KV()
 	keyPair, _, err := kv.Get(key, nil)
